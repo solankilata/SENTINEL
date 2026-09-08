@@ -1,0 +1,9 @@
+# Raw data - too large for GitHub, kept locally only
+data/sar_raw/
+data/rf_background/
+data/rf_synthetic/*.csv
+
+# Keep folder structure visible with placeholder files
+!data/sar_raw/.gitkeep
+!data/rf_background/.gitkeep
+!data/rf_synthetic/.gitkeep
