@@ -7,3 +7,4 @@ data/rf_synthetic/*.csv
 !data/sar_raw/.gitkeep
 !data/rf_background/.gitkeep
 !data/rf_synthetic/.gitkeep
+data/sar_processed/

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SENTINEL Project - SAR Preprocessing Graph
+  ============================================
+  This file defines a chain of 3 processing steps for SNAP's gpt tool:
+    1. Calibration        -> converts raw values to physically meaningful units
+    2. Speckle-Filter      -> reduces the grainy "salt and pepper" noise in SAR
+    3. Terrain-Correction  -> projects the image onto real map coordinates
+
+  WHY THIS ORDER MATTERS:
+    Calibration must come first (everything downstream depends on correct
+    physical units). Speckle filtering comes before terrain correction
+    because filtering works best on the original image grid, before any
+    geometric warping is applied.
+
+  HOW TO RUN THIS (from Command Prompt or VS Code terminal):
+    "C:\Program Files\snap\bin\gpt.exe" S1_preprocessing_graph.xml -Pinput=<path_to_your_SAFE_or_zip> -Poutput=<desired_output_name>.dim
+
+  EXAMPLE:
+    "C:\Program Files\snap\bin\gpt.exe" S1_preprocessing_graph.xml -Pinput=D:\SENTINEL\data\sar_raw\S1D_..._20260625....SAFE.zip -Poutput=D:\SENTINEL\data\sar_processed\vizag_20260625.dim
+-->
+<graph id="SENTINEL_SAR_Preprocessing">
+  <version>1.0</version>
+
+  <!-- STEP 0: Read the raw input file -->
+  <node id="Read">
+    <operator>Read</operator>
+    <sources/>
+    <parameters>
+      <file>${input}</file>
+    </parameters>
+  </node>
+
+  <!-- STEP 1: Calibration
+       Converts raw digital numbers into "Sigma Naught" (a physically
+       meaningful radar backscatter unit), so that two images from
+       different dates can be validly compared. -->
+  <node id="Calibration">
+    <operator>Calibration</operator>
+    <sources>
+      <sourceProduct refid="Read"/>
+    </sources>
+    <parameters>
+      <outputSigmaBand>true</outputSigmaBand>
+      <selectedPolarisations>VV,VH</selectedPolarisations>
+      <outputImageInComplex>false</outputImageInComplex>
+    </parameters>
+  </node>
+
+  <!-- STEP 2: Speckle Filter
+       SAR images have a natural grainy noise pattern (speckle) caused
+       by how radar waves interfere with each other. Left unfiltered,
+       this noise can be mistaken for "change" when comparing two dates.
+       "Refined Lee" is a standard, well-established filter choice that
+       reduces speckle while preserving real edges/structures (like the
+       port's breakwater) - important, since we don't want to blur away
+       the very features we're trying to detect changes in. -->
+  <node id="Speckle-Filter">
+    <operator>Speckle-Filter</operator>
+    <sources>
+      <sourceProduct refid="Calibration"/>
+    </sources>
+    <parameters>
+      <filter>Refined Lee</filter>
+      <filterSizeX>5</filterSizeX>
+      <filterSizeY>5</filterSizeY>
+    </parameters>
+  </node>
+
+  <!-- STEP 3: Terrain Correction (Geocoding)
+       Projects the image onto real-world map coordinates (latitude/
+       longitude), correcting for the satellite's side-looking viewing
+       angle. Without this step, our June and September images might
+       not line up pixel-for-pixel, making direct comparison unreliable.
+       Uses SRTM (a global elevation dataset) automatically downloaded
+       by SNAP to correct for terrain height differences. -->
+  <node id="Terrain-Correction">
+    <operator>Terrain-Correction</operator>
+    <sources>
+      <sourceProduct refid="Speckle-Filter"/>
+    </sources>
+    <parameters>
+      <demName>SRTM 3Sec</demName>
+      <pixelSpacingInMeter>10.0</pixelSpacingInMeter>
+      <mapProjection>WGS84(DD)</mapProjection>
+      <saveSelectedSourceBand>true</saveSelectedSourceBand>
+    </parameters>
+  </node>
+
+  <!-- STEP 4: Write the final processed output -->
+  <node id="Write">
+    <operator>Write</operator>
+    <sources>
+      <sourceProduct refid="Terrain-Correction"/>
+    </sources>
+    <parameters>
+      <file>${output}</file>
+      <formatName>BEAM-DIMAP</formatName>
+    </parameters>
+  </node>
+
+</graph>
