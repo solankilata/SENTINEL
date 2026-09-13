@@ -1,6 +1,6 @@
 # SENTINEL: Cross-Modal RF-SAR Anomaly Fusion for Confidence-Weighted Event Detection
 
-A B.Sc. (Hons.) Data Science & AI term project (IIT Guwahati) demonstrating that combining two independent, weak-ish sensor signals — RF anomaly detection and SAR change detection — through a properly learned fusion model produces meaningfully better event-detection performance than either sensor alone, or than naively combining them.
+A research project demonstrating that combining two independent, weak-ish sensor signals — RF anomaly detection and SAR change detection — through a properly learned fusion model produces meaningfully better event-detection performance than either sensor alone, or than naively combining them.
 
 ## Motivation
 
@@ -8,12 +8,12 @@ Single-modality anomaly detectors (RF-only or SAR-only) suffer from high false-p
 
 ## Architecture
 
-| Module | Course | What it does |
-|---|---|---|
-| 1. RF Anomaly Detection | DAO 3023 | Detects unusual radio signal activity (baseline Z-score vs. autoencoder) |
-| 2. SAR Change Detection | DAO 3051 | Detects physical change between two Sentinel-1 SAR images of the same area |
-| 3. Fusion Layer | *(novel, cross-cutting)* | Combines Module 1 & 2 outputs into a single confidence score |
-| 4. LLM Report Generation | DAO 3022 | Turns a fused, high-confidence detection into a grounded, readable analyst brief |
+| Module | What it does |
+|---|---|
+| 1. RF Anomaly Detection | Detects unusual radio signal activity (baseline Z-score vs. autoencoder) |
+| 2. SAR Change Detection | Detects physical change between two Sentinel-1 SAR images of the same area |
+| 3. Fusion Layer | Combines Module 1 & 2 outputs into a single confidence score — the core novel contribution |
+| 4. LLM Report Generation | Turns a fused, high-confidence detection into a grounded, readable analyst brief |
 
 ## Key Results
 
